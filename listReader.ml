@@ -42,14 +42,3 @@ let read_seplist ~sep ~body sc =
     end
   in
   Ring.optional (loop ~sep ~body (Ring.create ()) sc)
-
-let read_group opn clo ~body sc =
-  if SM.not_char opn sc then
-    None
-  else
-    let res = body sc in
-    if SM.char clo sc then
-      res
-    else
-      failwith (Printf.sprintf "label not closed with '%c'" clo)
-
