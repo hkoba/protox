@@ -42,6 +42,12 @@ let advance ?(len=1) cursor =
   cursor.pos <- cursor.pos + len;
   true  (* XXX: maybe bad habit *)
 
+let try_advance ?(len=1) cursor =
+  if can_peek ~len cursor then
+    advance ~len cursor
+  else
+    false
+
 let get_advanced ?len cursor =
   (ignore (advance ?len cursor); cursor)
 
