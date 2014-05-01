@@ -67,6 +67,37 @@ let iter ?sep ~f t =
     in
     loop last.next
 
+let find ~f t =
+  match last t with
+  | None -> None
+  | Some last ->
+    let rec loop el =
+      if f el.value then
+	Some el.value
+      else
+	loop el.next
+    in
+    loop last.next
+
+let compare ~cmp l' r' =
+  match last l', last r' with
+  | None, None -> 0
+  | Some _, None -> 1
+  | None, Some _ -> -1
+  | Some llast, Some rlast ->
+    let rec loop le re =
+      let c = cmp le.value re.value in
+      if c <> 0 then
+	c
+      else if Elem.is_equal re.next rlast then
+	1
+      else if Elem.is_equal le.next llast then
+	-1
+      else
+	loop le.next re.next
+    in
+    loop llast.next rlast.next
+
 let map_to_list ~f t =
   match last t with
   | None -> []
