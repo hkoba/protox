@@ -42,3 +42,49 @@ let read_seplist ~sep ~body sc =
     end
   in
   Ring.optional (loop ~sep ~body (Ring.create ()) sc)
+
+let read_tcl_quote sc =
+  let rec loop openBraces inQuotes sc =
+    if SC.end_of_string sc then
+      if openBraces <> 0 then
+	failwith "unmatched open brace in list"
+      else if inQuotes then
+	failwith "unmatched open quote in list"
+      else
+	sc
+    else match SC.peek sc with
+    | '{' ->
+      loop
+	(if openBraces > 0 then openBraces+1 else openBraces)
+	inQuotes
+	(SC.get_advanced sc)
+    | '}' ->
+      (if openBraces = 1 then
+	  (SC.get_advanced sc)
+       else
+	  loop
+	    (if openBraces > 1 then openBraces-1 else openBraces)
+	    inQuotes
+	    (SC.get_advanced sc)
+      )
+    | '\\' ->
+      if SC.try_advance ~len:2 sc then
+	loop openBraces inQuotes sc
+      else
+	failwith "premature end of backslash escape"
+    | '"' ->
+      if inQuotes then
+	SC.get_advanced sc
+      else
+	loop openBraces inQuotes (SC.get_advanced sc)
+    | _ ->
+      loop openBraces inQuotes (SC.get_advanced sc)
+  in
+  let start = SC.pos sc in
+  if SM.char '{' sc then
+    SC.to_string ~start (loop 1 false sc)
+  else if SM.char '"' sc then
+    SC.to_string ~start (loop 0 true sc)
+  else
+    failwith "Invalid beginning of tcl_list"
+

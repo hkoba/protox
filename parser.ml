@@ -13,15 +13,14 @@ let cc_atom  = CC.of_string "_ A-Z a-z 0-9 = ! @ % & * < > ? + - * / :"
 
 type 'a ring = 'a Ring.t
 
-type compound = Label | Group | Formula | BlkQuote | StrQuote
+type composition_type = Label | Group | Formula | QuotBlock | QuotString
 
-type quotation = compound * char * char
-
-type bareword = string
+type quotation = composition_type * char * char
 
 type term =
 | Compound of quotation * term ring
-| Atom     of bareword
+| Quoted   of quotation * string
+| Bareword of string
 
 let read_group quot ~body sc =
   let (_, opn, clo) = quot in
@@ -72,7 +71,8 @@ and _formula sc =
 
 and _atom sc =
   (SM.tab ~matching:(SM.many cc_atom) sc)
-  &&>> (fun v -> Some (Atom v))
+  &&>> (fun v -> Bareword v)
 
 and _qblock sc =
-  (read_group (BlkQuote, '{', '}') ~body:_term_or_label_list sc)
+  (read_group (QuotBlock, '{', '}') ~body:_term_or_label_list sc)
+

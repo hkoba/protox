@@ -12,7 +12,7 @@ let (|//) f g x =
 
 let (&&>>) x f =
   match x with
-  | Some v -> f v
+  | Some v -> Some (f v)
   | None -> None
 
 let call_optionally optf =

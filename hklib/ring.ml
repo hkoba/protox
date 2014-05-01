@@ -1,6 +1,6 @@
 (* -*- coding: utf-8 -*- *)
 
-(*open Core.Std*)
+open Core.Std
 open Optutil
 
 module Elem = struct
@@ -82,3 +82,8 @@ let map_to_list ~f t =
 
 let to_list t =
   map_to_list t ~f:(fun x -> x)
+
+let of_list l =
+  let r = create () in
+  List.iter ~f:(fun v -> unit_append r v) l;
+  r;
