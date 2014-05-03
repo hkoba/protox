@@ -3,7 +3,7 @@
 open OUnit2
 
 open Core.Std
-open Optutil
+(* open Optutil *)
 
 module CC = CharClass
 module SM = Strmatch
@@ -15,6 +15,9 @@ let pretty_term term =
   M.Fmt.with_pp M.Fmt.pp_term term
 
 
+let q_group   = (M.Group,   '(', ')')
+and q_formula = (M.Formula, '$', ';')
+
 let () = run_test_tt_main
   ("parser">:::
       (List.map ~f:(fun (pretty, term) ->
@@ -23,11 +26,8 @@ let () = run_test_tt_main
 	    pretty
 	    (pretty_term term)))
 	 ["foo", (M.Bareword "foo")
-	 ; "(foo bar)", (M.Compound
-			   ((M.Group, '(', ')')
-			       , (Ring.of_list
-				    [M.Bareword "foo"
-				    ; M.Bareword "bar"])))
+	 ; "(foo bar)", M.Compound((M.Group, '(', ')'), Ring.of_list
+	   [M.Bareword "foo"; M.Bareword "bar"])
 	 ]
       )
    @
@@ -42,10 +42,8 @@ let () = run_test_tt_main
 	; 1, (M.Bareword "def"), (M.Bareword "abc")
 	; -1, (M.Bareword "abc"), (M.Bareword "def")
 	; 0
-	  , (M.Compound
-	       ((M.Group, '(', ')'), (Ring.of_list [M.Bareword "foo"])))
-	  , (M.Compound
-	       ((M.Group, '(', ')'), (Ring.of_list [M.Bareword "foo"])))
+	  , M.Compound((M.Group, '(', ')'), Ring.of_list [M.Bareword "foo"])
+	  , M.Compound((M.Group, '(', ')'), Ring.of_list [M.Bareword "foo"])
       ]
      )
    @
@@ -59,12 +57,27 @@ let () = run_test_tt_main
 	    exp
 	    (M._term (SC.init input))
 	 )
-       ) ["foo bar baz", (Some (M.Bareword "foo"))
-	 ; "(foo bar) baz", (Some (M.Compound
-				     ((M.Group, '(', ')')
-					 , (Ring.of_list
-					      [M.Bareword "foo"
-					      ; M.Bareword "bar"]))))
+       ) ["foo bar baz"
+	     , Some(M.Bareword "foo")
+
+	 ; "(foo bar) baz"
+	   , Some(M.Compound(q_group, Ring.of_list
+	     [M.Bareword "foo"; M.Bareword "bar"]))
+
+	 ; "$foo bar; baz"
+	   , Some(M.Compound(q_formula, Ring.of_list
+	     [M.Bareword "foo"; M.Bareword "bar"]))
+
+	 ; "{foo bar} baz"
+	   , Some(M.Quoted((M.QuotBlock,'{','}'), "{foo bar}"))
+
+	 ; "\"foo bar\" baz"
+	   , Some(M.Quoted((M.QuotString,'"','"'), "\"foo bar\""))
+
+	 ; "(foo (bar baz))"
+	   , Some(M.Compound(q_group, Ring.of_list
+	     [M.Bareword "foo"; M.Compound(q_group, Ring.of_list
+	       [M.Bareword "bar"; M.Bareword "baz"])]))
 	 ]
       )
   )

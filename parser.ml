@@ -114,5 +114,3 @@ module Fmt = struct
     Ring.iter ~sep:(fun _ -> fmt ppf " ") ~f:(pp_term ppf) r
 
 end
-
-
