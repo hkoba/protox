@@ -43,6 +43,7 @@ let read_seplist ~sep ~body sc =
   in
   Ring.optional (loop ~sep ~body (Ring.create ()) sc)
 
+(* This mimics TclFindElement *)
 let read_tcl_quote sc =
   let rec loop openBraces inQuotes sc =
     if SC.end_of_string sc then
@@ -68,6 +69,7 @@ let read_tcl_quote sc =
 	    (SC.get_advanced sc)
       )
     | '\\' ->
+      (* Escape sequence is not supported. Just escaping one char. *)
       if SC.try_advance ~len:2 sc then
 	loop openBraces inQuotes sc
       else

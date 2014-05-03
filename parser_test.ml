@@ -17,6 +17,7 @@ let pretty_term term =
 
 let q_group   = (M.Group,   '(', ')')
 and q_formula = (M.Formula, '$', ';')
+and q_label   = (M.Label,   '[', ']')
 
 let () = run_test_tt_main
   ("parser">:::
@@ -68,8 +69,20 @@ let () = run_test_tt_main
 	   , Some(M.Compound(q_formula, Ring.of_list
 	     [M.Bareword "foo"; M.Bareword "bar"]))
 
+	 ; "$foo[+ 3][* 8]; baz"
+	   , Some(M.Compound(q_formula, Ring.of_list
+	     [M.Bareword "foo"
+	     ; M.Compound(q_label, Ring.of_list
+	       [M.Bareword "+"; M.Bareword "3"])
+	     ; M.Compound(q_label, Ring.of_list
+	       [M.Bareword "*"; M.Bareword "8"])]))
+
 	 ; "{foo bar} baz"
 	   , Some(M.Quoted((M.QuotBlock,'{','}'), "{foo bar}"))
+	 ; "{foo {bar baz}{}} baz"
+	   , Some(M.Quoted((M.QuotBlock,'{','}'), "{foo {bar baz}{}}"))
+	 ; "{)(;$][} baz"
+	   , Some(M.Quoted((M.QuotBlock,'{','}'), "{)(;$][}"))
 
 	 ; "\"foo bar\" baz"
 	   , Some(M.Quoted((M.QuotString,'"','"'), "\"foo bar\""))
@@ -78,6 +91,7 @@ let () = run_test_tt_main
 	   , Some(M.Compound(q_group, Ring.of_list
 	     [M.Bareword "foo"; M.Compound(q_group, Ring.of_list
 	       [M.Bareword "bar"; M.Bareword "baz"])]))
+
 	 ]
       )
   )
