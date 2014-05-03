@@ -58,6 +58,7 @@ and _term sc =
     | '(' -> _group   sc
     | '$' -> _formula sc
     | '{' -> _qblock  sc
+    | '"' -> _qstring sc
     | _   -> _atom    sc
 
 and _term_or_label sc =
@@ -74,5 +75,34 @@ and _atom sc =
   &&>> (fun v -> Bareword v)
 
 and _qblock sc =
-  (read_group (QuotBlock, '{', '}') ~body:_term_or_label_list sc)
+  Some (Quoted ((QuotBlock, '{', '}'), (read_tcl_quote sc)))
+
+and _qstring sc =
+  Some (Quoted ((QuotString, '"', '"'), (read_tcl_quote sc)))
+
+let rec compare_term lt rt =
+  match (lt, rt) with
+  | Compound (lq, lr), Compound (rq, rr) when lq = rq ->
+    Ring.compare ~cmp:compare_term lr rr
+  | Quoted (lq, ls), Quoted (rq, rs) when lq = rq ->
+    String.compare ls rs
+  | Bareword ls, Bareword rs ->
+    String.compare ls rs
+  | _, _ ->
+    failwith "type mismatch!"
+
+let rec pp_term ppf t =
+  match t with
+  | Compound ((_, opn, clo), r) ->
+    Format.fprintf ppf "%c%a%c" opn pp_ring clo
+  | Quoted ((_, opn, clo), s) ->
+    Format.fprintf ppf "%c%a%c" opn pp_str clo
+  | Bareword s ->
+    Format.fprintf ppf "%a" pp_str
+
+and pp_ring ppf r =
+  Ring.iter ~sep:(fun _ -> Format.fprintf ppf " ") ~f:(pp_term ppf) r
+
+and pp_str ppf s =
+  Format.fprintf ppf "%s" s
 
