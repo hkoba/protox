@@ -91,18 +91,28 @@ let rec compare_term lt rt =
   | _, _ ->
     failwith "type mismatch!"
 
-let rec pp_term ppf t =
-  match t with
-  | Compound ((_, opn, clo), r) ->
-    Format.fprintf ppf "%c%a%c" opn pp_ring clo
-  | Quoted ((_, opn, clo), s) ->
-    Format.fprintf ppf "%c%a%c" opn pp_str clo
-  | Bareword s ->
-    Format.fprintf ppf "%a" pp_str
+module Fmt = struct
+  let with_pp ?(bufsize=256) pp v =
+    let buf = Buffer.create bufsize in
+    let ppf = Format.formatter_of_buffer buf in
+    pp ppf v;
+    Format.pp_print_flush ppf ();
+    Buffer.contents buf
+    
+  let fmt = Format.fprintf
 
-and pp_ring ppf r =
-  Ring.iter ~sep:(fun _ -> Format.fprintf ppf " ") ~f:(pp_term ppf) r
+  let rec pp_term ppf t =
+    match t with
+    | Compound ((_, opn, clo), r) ->
+      (fmt ppf "%c%a%c" opn pp_ring r clo)
+    | Quoted ((_, opn, clo), s) ->
+      (fmt ppf "%c" opn; fmt ppf "%s" s; fmt ppf "%c" clo)
+    | Bareword s ->
+      fmt ppf "%s" s
 
-and pp_str ppf s =
-  Format.fprintf ppf "%s" s
+  and pp_ring ppf r =
+    Ring.iter ~sep:(fun _ -> fmt ppf " ") ~f:(pp_term ppf) r
+
+end
+
 
