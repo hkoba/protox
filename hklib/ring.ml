@@ -79,22 +79,27 @@ let find ~f t =
     in
     loop last.next
 
-let compare ~cmp l' r' =
+let compare ?(cmp=Pervasives.compare) l' r' =
   match last l', last r' with
   | None, None -> 0
   | Some _, None -> 1
   | None, Some _ -> -1
   | Some llast, Some rlast ->
+    let lhead = llast.next and rhead = rlast.next
+    in
     let rec loop le re =
       let c = cmp le.value re.value in
       if c <> 0 then
 	c
-      else if Elem.is_equal re.next rlast then
-	1
-      else if Elem.is_equal le.next llast then
-	-1
-      else
+      else match (Elem.is_equal le.next lhead, Elem.is_equal re.next rhead) with
+      | true, true ->
+	0
+      | false, false ->
 	loop le.next re.next
+      | true, false ->
+	-1
+      | false, true ->
+	1
     in
     loop llast.next rlast.next
 
