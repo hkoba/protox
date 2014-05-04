@@ -48,8 +48,8 @@ Instead of using `#<m>` slot as upper limit, I use it as separator rule slot.
        SEP SEP elem SEP SEP elem
 
 
-
-With this, the above example is rewritten as follows:
+With this, if leading `,` is allowed like `,,elem`, 
+the above example is rewritten as follows:
 
       1#<",">element
 
@@ -58,10 +58,10 @@ or simply
       #<",">element
 
 
-The sytax
+The syntax of this language
 --------------------
 
-     script       = #<NLSEP>(statement | directive)
+     script       = #<NLSEM>(statement | directive)
 
      directive    = "#" *[^\n] "\n"
 
@@ -86,7 +86,7 @@ The sytax
 
      atom         = 1*[_ A-Z a-z 0-9 = ! @ % & < > ? + - * / : . ~ , | ^]
 
-     NLSEP        = ("\n"| ";")
+     NLSEM        = ("\n"| ";")
 
      HWS          = (" " | "\t")
 
