@@ -9,7 +9,7 @@ module CC = CharClass
 let cc_nlsem = CC.of_string "-0x0a ;"
 let cc_hws   = CC.of_string "-0x20 -0x09"
 let cc_ws    = CC.of_string "-0x20 -0x09 -0x0a"
-let cc_atom  = CC.of_string "_ A-Z a-z 0-9 = ! @ % & * < > ? + - * / :"
+let cc_atom  = CC.of_string "_ A-Z a-z 0-9 = ! @ % & < > ? + - * / : . ~ , | ^"
 
 type 'a ring = 'a Ring.t
 
@@ -17,17 +17,19 @@ type composition_type = Label | Group | Formula | QuotBlock | QuotString
 
 type quotation = composition_type * char * char
 
-type term =
+type script   = statement ring
+and statement = term ring
+and term =
 | Compound of quotation * term ring
 | Quoted   of quotation * string
 | Bareword of string
 
-let read_group quot ~body sc =
+let read_group quot ~elem sc =
   let (_, opn, clo) = quot in
   if SM.not_char opn sc then
     None
   else
-    let res = body sc in
+    let res = elem sc in
     if SM.char clo sc then
       match res with
       | None -> None
@@ -36,19 +38,19 @@ let read_group quot ~body sc =
       failwith (Printf.sprintf "label not closed with '%c'" clo)
 
 let rec _script sc =
-  read_list ~sep:(SM.many cc_nlsem) ~body:_statement sc
+  read_list ~sep:(SM.many cc_nlsem) ~elem:_statement sc
 
 and _statement sc =
-  read_list ~sep:(SM.many cc_hws) ~body:_labeled_term sc
+  read_list ~sep:(SM.many cc_hws) ~elem:_labeled_term sc
 
 and _labeled_term sc =
-  read_seplist ~sep:_label ~body:_term sc
+  read_seplist ~sep:_label ~elem:_term sc
 
 and _label sc =
-  read_group (Label, '[', ']') ~body:_term_or_label_list sc
+  read_group (Label, '[', ']') ~elem:_term_or_label_list sc
 
 and _term_or_label_list sc =
-  read_list ~sep:(SM.many cc_ws) ~body:_term_or_label sc
+  read_list ~sep:(SM.many cc_ws) ~elem:_term_or_label sc
 
 and _term sc =
   if SC.end_of_string sc then
@@ -65,10 +67,10 @@ and _term_or_label sc =
   (_term |// _label) sc
 
 and _group sc =
-  (read_group (Group, '(', ')') ~body:_term_or_label_list sc)
+  (read_group (Group, '(', ')') ~elem:_term_or_label_list sc)
 
 and _formula sc =
-  (read_group (Formula, '$', ';') ~body:_term_or_label_list sc)
+  (read_group (Formula, '$', ';') ~elem:_term_or_label_list sc)
 
 and _atom sc =
   (SM.tab ~matching:(SM.many cc_atom) sc)
@@ -101,7 +103,11 @@ module Fmt = struct
     
   let fmt = Format.fprintf
 
-  let rec pp_term ppf t =
+  let rec pp ppf script =
+    Ring.iter ~sep:(fun _ -> fmt ppf ";@;") ~f:(pp_statement ppf) script
+  and pp_statement ppf stat =
+    Ring.iter ~sep:(fun _ -> fmt ppf " @;") ~f:(pp_term ppf) stat
+  and pp_term ppf t =
     match t with
     | Compound ((_, opn, clo), r) ->
       (fmt ppf "%c%a%c" opn pp_ring r clo)

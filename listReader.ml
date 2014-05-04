@@ -5,43 +5,43 @@ open Core.Std
 module SC = Strcursor
 module SM = Strmatch
 
-let read_list ?(debug=false) ~sep ~body sc =
-  let rec loop ~sep ~body ring sc =
+let read_list ?(debug=false) ~sep ~elem sc =
+  let rec loop ~sep ~elem ring sc =
     ignore (sep sc);
     let start = SC.pos sc in
-    match body sc with
+    match elem sc with
     | None   -> ring
     | Some m -> begin
       (if debug then
 	  Printf.printf "match = '%s'\n" (SC.to_string ~start sc));
       Ring.unit_append ring m;
       if SC.can_peek sc then
-	loop ~sep ~body ring sc
+	loop ~sep ~elem ring sc
       else
 	ring
     end
   in
-  Ring.optional (loop ~sep ~body (Ring.create ()) sc)
+  Ring.optional (loop ~sep ~elem (Ring.create ()) sc)
 
-let read_seplist ~sep ~body sc =
+let read_seplist ~sep ~elem sc =
   let rec skip_sep ring sc =
     match sep sc with
     | None -> ()
     | Some m -> (Ring.unit_append ring m; skip_sep ring sc)
   in
-  let rec loop ~sep ~body ring sc =
+  let rec loop ~sep ~elem ring sc =
     skip_sep ring sc;
-    match body sc with
+    match elem sc with
     | None   -> ring
     | Some m -> begin
       Ring.unit_append ring m;
       if SC.can_peek sc then
-	loop ~sep ~body ring sc
+	loop ~sep ~elem ring sc
       else
 	ring
     end
   in
-  Ring.optional (loop ~sep ~body (Ring.create ()) sc)
+  Ring.optional (loop ~sep ~elem (Ring.create ()) sc)
 
 (* This mimics TclFindElement *)
 let read_tcl_quote sc =
