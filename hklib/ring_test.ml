@@ -15,6 +15,24 @@ let () = run_test_tt_main
 	      ["foo"; "bar"]
 	      (Ring.to_list (Ring.of_list ["foo"; "bar"])))
       ]
+   @ (List.map ~f:(fun (sum, l) ->
+     "length">::(fun _ ->
+       assert_equal sum (Ring.length (Ring.of_list l))
+     )
+   ) [0, []
+     ;1, [1]
+     ;3, [1;2;3]
+   ])
+
+   @ (List.map ~f:(fun (sum, l) ->
+     "iter">::(fun _ ->
+       let n = ref 0 in
+       Ring.iter ~f:(fun v -> n := v + !n) (Ring.of_list l);
+       assert_equal sum !n
+     )
+   ) [0, []
+     ;6, [1;2;3]
+   ])
    @ (List.map ~f:(fun (res, l, r) ->
      let theme = Printf.sprintf "compare %s %s => %d"
        (String.concat l) (String.concat r) res

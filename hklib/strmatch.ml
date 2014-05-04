@@ -5,7 +5,7 @@ module SC = Strcursor
 module CC = CharClass
 
 let char ch sc =
-  SC.peek sc = ch && SC.advance sc
+  SC.can_peek sc && SC.peek sc = ch && SC.advance sc
 let not_char ch sc =
   not (char ch sc)
 

@@ -106,7 +106,9 @@ module Fmt = struct
   let rec pp ppf script =
     Ring.iter ~sep:(fun _ -> fmt ppf ";@;") ~f:(pp_statement ppf) script
   and pp_statement ppf stat =
-    Ring.iter ~sep:(fun _ -> fmt ppf " @ ") ~f:(pp_term ppf) stat
+    Ring.iter ~sep:(fun _ -> fmt ppf " @ ") ~f:(pp_labeled_term ppf) stat
+  and pp_labeled_term ppf stat =
+    Ring.iter ~f:(pp_term ppf) stat
   and pp_term ppf t =
     match t with
     | Compound ((_, opn, clo), r) ->

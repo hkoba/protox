@@ -67,6 +67,11 @@ let iter ?sep ~f t =
     in
     loop last.next
 
+let length t =
+  let len = ref 0 in
+  iter ~f:(fun _ -> incr len) t;
+  !len
+
 let find ~f t =
   match last t with
   | None -> None
