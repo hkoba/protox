@@ -11,18 +11,7 @@ let cc_hws   = CC.of_string "-0x20 -0x09"
 let cc_ws    = CC.of_string "-0x20 -0x09 -0x0a"
 let cc_atom  = CC.of_string "_ A-Z a-z 0-9 = ! @ % & < > ? + - * / : . ~ , | ^"
 
-type 'a ring = 'a Ring.t
-
-type composition_type = Label | Group | Formula | QuotBlock | QuotString
-
-type quotation = composition_type * char * char
-
-type script   = statement ring
-and statement = term ring
-and term =
-| Compound of quotation * term ring
-| Quoted   of quotation * string
-| Bareword of string
+include ValTypes
 
 let read_group quot ~elem sc =
   let (_, opn, clo) = quot in
@@ -74,21 +63,21 @@ and _formula sc =
 
 and _atom sc =
   (SM.tab ~matching:(SM.many cc_atom) sc)
-  &&>> (fun v -> Bareword v)
+  &&>> (fun v -> BareText v)
 
 and _qblock sc =
-  Some (Quoted ((QuotBlock, '{', '}'), (read_tcl_quote sc)))
+  Some (QuotedText ((QuotBlock, '{', '}'), (read_tcl_quote sc)))
 
 and _qstring sc =
-  Some (Quoted ((QuotString, '"', '"'), (read_tcl_quote sc)))
+  Some (QuotedText ((QuotString, '"', '"'), (read_tcl_quote sc)))
 
 let rec compare_term lt rt =
   match (lt, rt) with
   | Compound (lq, lr), Compound (rq, rr) when lq = rq ->
     Ring.compare ~cmp:compare_term lr rr
-  | Quoted (lq, ls), Quoted (rq, rs) when lq = rq ->
+  | QuotedText (lq, ls), QuotedText (rq, rs) when lq = rq ->
     String.compare ls rs
-  | Bareword ls, Bareword rs ->
+  | BareText ls, BareText rs ->
     String.compare ls rs
   | _, _ ->
     failwith "type mismatch!"
@@ -113,9 +102,9 @@ module Fmt = struct
     match t with
     | Compound ((_, opn, clo), r) ->
       (fmt ppf "%c%a%c" opn pp_ring r clo)
-    | Quoted ((_, opn, clo), s) ->
+    | QuotedText ((_, opn, clo), s) ->
       (fmt ppf "%c" opn; fmt ppf "%s" s; fmt ppf "%c" clo)
-    | Bareword s ->
+    | BareText s ->
       fmt ppf "%s" s
 
   and pp_ring ppf r =
