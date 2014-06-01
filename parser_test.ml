@@ -10,14 +10,15 @@ module SM = Strmatch
 module SC = Strcursor
 
 module M = Parser
+open M.T
 
 let pretty_term term =
   M.Fmt.with_pp M.Fmt.pp_term term
 
 
-let q_group   = (M.Group,   '(', ')')
-and q_formula = (M.Formula, '$', ';')
-and q_label   = (M.Label,   '[', ']')
+let q_group   = (Group,   '(', ')')
+and q_formula = (Formula, '$', ';')
+and q_label   = (Label,   '[', ']')
 
 let () = run_test_tt_main
   ("parser">:::
@@ -26,9 +27,9 @@ let () = run_test_tt_main
 	  assert_equal
 	    pretty
 	    (pretty_term term)))
-	 ["foo", (M.BareText "foo")
-	 ; "(foo bar)", M.Compound((M.Group, '(', ')'), Ring.of_list
-	   [M.BareText "foo"; M.BareText "bar"])
+	 ["foo", (BareText "foo")
+	 ; "(foo bar)", Compound((Group, '(', ')'), Ring.of_list
+	   [BareText "foo"; BareText "bar"])
 	 ]
       )
    @
@@ -39,12 +40,12 @@ let () = run_test_tt_main
        theme >:: (fun _ ->
 	 assert_equal res (M.compare_term x y)
        )
-      ) [0, (M.BareText "abc"), (M.BareText "abc")
-	; 1, (M.BareText "def"), (M.BareText "abc")
-	; -1, (M.BareText "abc"), (M.BareText "def")
+      ) [0, (BareText "abc"), (BareText "abc")
+	; 1, (BareText "def"), (BareText "abc")
+	; -1, (BareText "abc"), (BareText "def")
 	; 0
-	  , M.Compound((M.Group, '(', ')'), Ring.of_list [M.BareText "foo"])
-	  , M.Compound((M.Group, '(', ')'), Ring.of_list [M.BareText "foo"])
+	  , Compound((Group, '(', ')'), Ring.of_list [BareText "foo"])
+	  , Compound((Group, '(', ')'), Ring.of_list [BareText "foo"])
       ]
      )
    @
@@ -59,38 +60,38 @@ let () = run_test_tt_main
 	    (M._term (SC.init input))
 	 )
        ) ["foo bar baz"
-	     , Some(M.BareText "foo")
+	     , Some(BareText "foo")
 
 	 ; "(foo bar) baz"
-	   , Some(M.Compound(q_group, Ring.of_list
-	     [M.BareText "foo"; M.BareText "bar"]))
+	   , Some(Compound(q_group, Ring.of_list
+	     [BareText "foo"; BareText "bar"]))
 
 	 ; "$foo bar; baz"
-	   , Some(M.Compound(q_formula, Ring.of_list
-	     [M.BareText "foo"; M.BareText "bar"]))
+	   , Some(Compound(q_formula, Ring.of_list
+	     [BareText "foo"; BareText "bar"]))
 
 	 ; "$foo[+ 3][* 8]; baz"
-	   , Some(M.Compound(q_formula, Ring.of_list
-	     [M.BareText "foo"
-	     ; M.Compound(q_label, Ring.of_list
-	       [M.BareText "+"; M.BareText "3"])
-	     ; M.Compound(q_label, Ring.of_list
-	       [M.BareText "*"; M.BareText "8"])]))
+	   , Some(Compound(q_formula, Ring.of_list
+	     [BareText "foo"
+	     ; Compound(q_label, Ring.of_list
+	       [BareText "+"; BareText "3"])
+	     ; Compound(q_label, Ring.of_list
+	       [BareText "*"; BareText "8"])]))
 
 	 ; "{foo bar} baz"
-	   , Some(M.QuotedText((M.QuotBlock,'{','}'), "{foo bar}"))
+	   , Some(QuotedText((QuotBlock,'{','}'), "{foo bar}"))
 	 ; "{foo {bar baz}{}} baz"
-	   , Some(M.QuotedText((M.QuotBlock,'{','}'), "{foo {bar baz}{}}"))
+	   , Some(QuotedText((QuotBlock,'{','}'), "{foo {bar baz}{}}"))
 	 ; "{)(;$][} baz"
-	   , Some(M.QuotedText((M.QuotBlock,'{','}'), "{)(;$][}"))
+	   , Some(QuotedText((QuotBlock,'{','}'), "{)(;$][}"))
 
 	 ; "\"foo bar\" baz"
-	   , Some(M.QuotedText((M.QuotString,'"','"'), "\"foo bar\""))
+	   , Some(QuotedText((QuotString,'"','"'), "\"foo bar\""))
 
 	 ; "(foo (bar baz))"
-	   , Some(M.Compound(q_group, Ring.of_list
-	     [M.BareText "foo"; M.Compound(q_group, Ring.of_list
-	       [M.BareText "bar"; M.BareText "baz"])]))
+	   , Some(Compound(q_group, Ring.of_list
+	     [BareText "foo"; Compound(q_group, Ring.of_list
+	       [BareText "bar"; BareText "baz"])]))
 
 	 ]
       )

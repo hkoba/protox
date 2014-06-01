@@ -1,12 +1,15 @@
 type 'a ring = 'a Ring.t
 
-type composition_type = Label | Group | Formula | QuotBlock | QuotString
+type composition_t = Label | Group | Formula | QuotBlock | QuotString
 
-type quotation = composition_type * char * char
+type quotation_t = composition_t * char * char
 
-type script   = statement ring
-and statement = term ring
-and term =
-| Compound   of quotation * term ring
-| QuotedText of quotation * string
+type script_t    = statement_t ring
+
+and  statement_t = term_t ring
+
+and  term_t =
+| Compound   of quotation_t * term_t ring
+| QuotedText of quotation_t * string
 | BareText   of string
+

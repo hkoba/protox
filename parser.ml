@@ -11,7 +11,8 @@ let cc_hws   = CC.of_string "-0x20 -0x09"
 let cc_ws    = CC.of_string "-0x20 -0x09 -0x0a"
 let cc_atom  = CC.of_string "_ A-Z a-z 0-9 = ! @ % & < > ? + - * / : . ~ , | ^"
 
-include ValTypes
+module T = ValTypes
+open T
 
 let read_group quot ~elem sc =
   let (_, opn, clo) = quot in
