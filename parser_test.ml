@@ -10,7 +10,7 @@ module SM = Strmatch
 module SC = Strcursor
 
 module M = Parser
-open M.T
+open ValTypes
 
 let pretty_term term =
   M.Fmt.with_pp M.Fmt.pp_term term
