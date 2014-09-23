@@ -1,0 +1,5 @@
+B _build
+S hklib
+B _build/hklib
+PKG core
+PKG oUnit
